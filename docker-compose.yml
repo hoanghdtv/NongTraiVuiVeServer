@@ -1,5 +1,5 @@
 # docker-compose.yml
-version: "3.8"
+version: '3'
 services:
   postgres:
     container_name: colyseus-postgres
@@ -7,7 +7,8 @@ services:
     environment:
       - POSTGRES_DB=nakama
       - POSTGRES_PASSWORD=localdb
-    volumes: ["postgres-data:/var/lib/postgresql/data"]
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
     expose:
       - "8080"
       - "5432"
@@ -20,22 +21,21 @@ services:
       timeout: 3s
       retries: 5
   nakama:
+    build: ./nakama
     container_name: colyseus-nakama
-    image: heroiclabs/nakama:3.23.0
     entrypoint:
       - "/bin/sh"
       - "-ecx"
       - >
         /nakama/nakama migrate up --database.address postgres:localdb@postgres:5432/nakama &&
-        exec /nakama/nakama --name nakama1 --database.address postgres:localdb@postgres:5432/nakama --logger.level DEBUG --session.token_expiry_sec 7200        
+        exec /nakama/nakama --config /nakama/data/local.yml --database.address postgres:localdb@postgres:5432/nakama        
     restart: always
     links:
       - "postgres:db"
+    # restart: unless-stopped
     depends_on:
       postgres:
         condition: service_healthy
-    volumes:
-      - ./:/nakama/data
     expose:
       - "7349"
       - "7350"
@@ -49,33 +49,34 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
-  redis:
-    image: redis:7
-    container_name: colyseus-redis
-    restart: unless-stopped
-    ports:
-      - "6379:6379"
-    volumes:
-      - redis-data:/data
-    networks:
-      - coly-net
 
-  colyseus:
-    build: .
-    container_name: colyseus
-    restart: unless-stopped
-    environment:
-      - PORT=2567
-      - REDIS_URL=redis://redis:6379
-      - NODE_ENV=development
-      - NAKAMA_URL=localhost:7350
-    depends_on:
-      - redis
-      - nakama
-    ports:
-      - "2567:2567"
-    networks:
-      - coly-net
+  # redis:
+  #   image: redis:7
+  #   container_name: colyseus-redis
+  #   restart: unless-stopped
+  #   ports:
+  #     - "6379:6379"
+  #   volumes:
+  #     - redis-data:/data
+  #   networks:
+  #     - coly-net
+
+  # colyseus:
+  #   build: .
+  #   container_name: colyseus
+  #   restart: unless-stopped
+  #   environment:
+  #     - PORT=2567
+  #     - REDIS_URL=redis://redis:6379
+  #     - NODE_ENV=development
+  #     - NAKAMA_URL=localhost:7350
+  #   depends_on:
+  #     - redis
+  #     - nakama
+  #   ports:
+  #     - "2567:2567"
+  #   networks:
+  #     - coly-net
 
 volumes:
   postgres-data:

@@ -12,6 +12,10 @@ import { listen } from "@colyseus/tools";
 
 // Import Colyseus config
 import app from "./app.config";
+import RedisSubscriber from "./infrastructures/bridge/RedisSubscriber";
+
+// Initialize and start the Colyseus game server
+const bridge = new RedisSubscriber(app.options.presence as any);
 
 // Create and listen on 2567 (or PORT environment variable.)
 listen(app);
