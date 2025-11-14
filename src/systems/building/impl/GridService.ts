@@ -1,9 +1,10 @@
 // src/systems/buildings/GridService.ts
-import {PlacedBuilding, BuildingsState } from "../../building/types";
+import { PlacedBuilding, BuildingsState } from "../types";
+import { IGridService } from "../IGridService";
 
 function keyOf(x: number, y: number) { return `${x}:${y}`; }
 
-export class GridService {
+export class GridService implements IGridService {
   private state: BuildingsState;
 
   constructor(initial?: BuildingsState) {

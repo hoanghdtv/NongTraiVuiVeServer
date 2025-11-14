@@ -10,87 +10,72 @@ const path = require('path');
 
 // Paths
 const sharedDir = path.join(__dirname, '../shared');
-const nakamaTypesFile = path.join(__dirname, '../nakama/src/shared-types.ts');
+const nakamaSharedDir = path.join(__dirname, '../nakama/src/shared');
 
-console.log('🔄 Syncing shared types to Nakama...');
+console.log('🔄 Syncing shared directory to Nakama...');
 
 try {
-  // Read shared files
-  const gameConfigsPath = path.join(sharedDir, 'configs/game-configs.ts');
-  const farmStatesPath = path.join(sharedDir, 'schemas/farm-states.ts');
-  
-  let gameConfigsContent = '';
-  let farmStatesContent = '';
-  
-  if (fs.existsSync(gameConfigsPath)) {
-    gameConfigsContent = fs.readFileSync(gameConfigsPath, 'utf8');
+  // Create nakama/src/shared directory if it doesn't exist
+  if (!fs.existsSync(nakamaSharedDir)) {
+    fs.mkdirSync(nakamaSharedDir, { recursive: true });
+    console.log('📁 Created:', nakamaSharedDir);
   }
   
-  if (fs.existsSync(farmStatesPath)) {
-    farmStatesContent = fs.readFileSync(farmStatesPath, 'utf8');
+  // Function to recursively copy directory
+  function copyDirectory(src, dest) {
+    // Create destination directory
+    if (!fs.existsSync(dest)) {
+      fs.mkdirSync(dest, { recursive: true });
+    }
+    
+    // Read source directory
+    const entries = fs.readdirSync(src, { withFileTypes: true });
+    
+    for (const entry of entries) {
+      const srcPath = path.join(src, entry.name);
+      const destPath = path.join(dest, entry.name);
+      
+      if (entry.isDirectory()) {
+        // Recursively copy subdirectory
+        copyDirectory(srcPath, destPath);
+      } else if (entry.isFile() && entry.name.endsWith('.ts')) {
+        // Copy TypeScript files
+        const content = fs.readFileSync(srcPath, 'utf8');
+        
+        // Transform imports for Nakama compatibility
+        const transformedContent = content
+          .replace(/from ['"]crypto['"]/g, 'from "node:crypto"')
+          .replace(/export \{[^}]*\} from ['"]\.\/index['"]/g, ''); // Remove re-exports
+        
+        fs.writeFileSync(destPath, transformedContent);
+        console.log('  ✓ Copied:', entry.name);
+      }
+    }
   }
   
-  // Extract type definitions (remove imports and exports)
-  const extractTypes = (content) => {
-    return content
-      .replace(/import.*from.*['"];/g, '')  // Remove imports
-      .replace(/export\s+/g, '')            // Remove export keywords
-      .replace(/\/\/ Example.*[\s\S]*$/m, '') // Remove example data
-      .trim();
-  };
+  // Copy shared directory structure
+  copyDirectory(sharedDir, nakamaSharedDir);
   
-  const gameConfigTypes = extractTypes(gameConfigsContent);
-  const farmStateTypes = extractTypes(farmStatesContent);
-  
-  // Generate Nakama-compatible types file
-  const nakamaTypesContent = `// Auto-generated shared types for Nakama
-// DO NOT EDIT - Run 'npm run sync-shared' to update
-
-${gameConfigTypes}
-
-${farmStateTypes}
-
-// Helper functions for Nakama
-function computeConfigChecksum(cfg: Omit<GameConfig,'checksum'>): string {
-  const canonical = JSON.stringify(cfg);
-  // Simple hash for Nakama (since we don't have crypto module)
-  let hash = 0;
-  for (let i = 0; i < canonical.length; i++) {
-    const char = canonical.charCodeAt(i);
-    hash = ((hash << 5) - hash) + char;
-    hash = hash & hash; // Convert to 32bit integer
-  }
-  return hash.toString();
-}
-
-function buildConfigWithChecksum(cfg: Omit<GameConfig,'checksum'>): GameConfig {
-  return { ...cfg, checksum: computeConfigChecksum(cfg) };
-}
-
-// Example config for Nakama
-const exampleConfig: Omit<GameConfig, 'checksum'> = {
-  config_version: '2025-11-14-0',
-  building_defs: {
-    barn: { id: 'barn', base_hp: 100, upgrade_cost: [{ gold: 100 }], max_level: 5 }
-  },
-  crop_defs: {
-    wheat: { id: 'wheat', growth_seconds: 3600, stages: [0.25,0.5,0.8,1], yield: { wheat: 3 } }
-  }
-};
+  // Create index.ts in nakama/src/shared if it doesn't exist
+  const nakamaIndexPath = path.join(nakamaSharedDir, 'index.ts');
+  if (!fs.existsSync(nakamaIndexPath)) {
+    const indexContent = `// Re-export all shared types for Nakama
+export * from './configs/game-configs';
+export * from './schemas/farm-states';
+export * from './configs/building-def';
+export * from './configs/crop-def';
+export * from './configs/types';
 `;
-  
-  // Write to Nakama
-  const nakamaDir = path.dirname(nakamaTypesFile);
-  if (!fs.existsSync(nakamaDir)) {
-    fs.mkdirSync(nakamaDir, { recursive: true });
+    fs.writeFileSync(nakamaIndexPath, indexContent);
+    console.log('  ✓ Created: index.ts');
   }
   
-  fs.writeFileSync(nakamaTypesFile, nakamaTypesContent);
-  
-  console.log('✅ Shared types synced to:', nakamaTypesFile);
-  console.log('📝 Now you can import in main.ts with: /// <reference path="./shared-types.ts" />');
+  console.log('✅ Shared directory synced to Nakama');
+  console.log('📂 Location:', nakamaSharedDir);
+  console.log('� Import in Nakama: import { GameConfig } from "./shared"');
   
 } catch (error) {
-  console.error('❌ Error syncing shared types:', error.message);
+  console.error('❌ Error syncing shared directory:', error.message);
+  console.error(error.stack);
   process.exit(1);
 }

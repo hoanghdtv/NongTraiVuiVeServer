@@ -1,4 +1,5 @@
-/// <reference path="./shared-types.ts" />
+// Import shared modules
+import * as Shared from './shared/index';
 
 // RPC function to get game config
 let rpcGetConfig: nkruntime.RpcFunction = function(ctx: nkruntime.Context, logger: nkruntime.Logger, nk: nkruntime.Nakama, payload: string): string {
@@ -6,12 +7,11 @@ let rpcGetConfig: nkruntime.RpcFunction = function(ctx: nkruntime.Context, logge
     
     try {
         // Get the current game config (you can store this in storage or hardcode for now)
-        const config = exampleConfig;
-        const configWithChecksum = buildConfigWithChecksum(config);
+        const config = Shared.exampleConfig;
         
         return JSON.stringify({
             success: true,
-            config: configWithChecksum
+            config: config
         });
     } catch (error) {
         logger.error('Error getting config: ' + error);
@@ -43,33 +43,45 @@ let rpcGetFarm: nkruntime.RpcFunction = function(ctx: nkruntime.Context, logger:
         }];
         
         const objects = nk.storageRead(read);
-        let farmState: FarmState;
+        let farmState: Shared.FarmState;
         
         if (objects.length > 0) {
-            farmState = objects[0].value as FarmState;
+            farmState = objects[0].value as Shared.FarmState;
         } else {
-            // Create new farm state
+            // Create new farm state using exampleFarmState as template
             farmState = {
-                farm_id: 'farm:' + userId,
-                owner_user_id: userId,
-                schema_version: '1.0.0',
-                sequence: 0,
-                last_updated: new Date().toISOString(),
-                modules: {
-                    crop: { 
-                        version: '1.0.0', 
-                        data: { 
-                            plots: [], 
-                            seed_inventory: { wheat: 10 } 
-                        } 
-                    },
-                    building: {
-                        version: '1.0.0',
-                        data: {
-                            buildings: [],
-                            resources: { gold: 1000, wood: 100 }
-                        }
+                version: 1,
+                tick: 0,
+                timeLastSaved: Date.now(),
+                players: {
+                    [userId]: {
+                        id: userId,
+                        name: ctx.username || 'Player',
+                        gold: 1000,
+                        ownedBuildingIds: [],
+                        ownedCropIds: [],
+                        ownedAnimalIds: [],
+                        inventoryId: 'inventory_' + userId,
+                        lastActiveAt: Date.now()
                     }
+                },
+                buildings: {},
+                crops: {},
+                animals: {},
+                inventories: {
+                    ['inventory_' + userId]: {
+                        id: 'inventory_' + userId,
+                        ownerId: userId,
+                        capacity: 50,
+                        items: { wood: 100, gold: 1000 },
+                        lastModifiedAt: Date.now()
+                    }
+                },
+                world: {
+                    season: 'spring',
+                    dayIndex: 1,
+                    timeOfDay: 0,
+                    tickIntervalSeconds: 1
                 }
             };
             
@@ -123,16 +135,16 @@ let rpcUpdateFarm: nkruntime.RpcFunction = function(ctx: nkruntime.Context, logg
         }
 
         // Validate that the farm belongs to the user
-        if (farmState.owner_user_id !== userId) {
+        if (!farmState.players[userId]) {
             return JSON.stringify({ 
                 success: false, 
                 error: 'Unauthorized: farm does not belong to user' 
             });
         }
 
-        // Update sequence for optimistic locking
-        farmState.sequence += 1;
-        farmState.last_updated = new Date().toISOString();
+        // Update tick and timestamp
+        farmState.tick += 1;
+        farmState.timeLastSaved = Date.now();
         
         // Save updated farm state
         const write: nkruntime.StorageWriteRequest[] = [{

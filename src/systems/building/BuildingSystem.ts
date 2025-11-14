@@ -8,7 +8,7 @@ import {
   RemoveBuildingAction,
   UpgradeBuildingAction,
   PlacedBuilding,
-  BuildingTemplate
+  BuildingDef
 } from "./types";
 import { PlayerContext } from "../../models/PlayerContext";
 import { ActionResult } from "../../models/ActionResult";

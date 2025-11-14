@@ -1,6 +1,6 @@
 import { BuildingDef } from './building-def';
 
-// import crypto from 'crypto';
+// import crypto from "node:crypto";
 import { CropDef } from './crop-def';
 
 // Shared Game Config types and example data

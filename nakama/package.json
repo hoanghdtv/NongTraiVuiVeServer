@@ -20,6 +20,7 @@
     "typescript": "^5.9.3"
   },
   "dependencies": {
-    "nakama-runtime": "github:heroiclabs/nakama-common"
+    "nakama-runtime": "github:heroiclabs/nakama-common",
+    "uuid": "^13.0.0"
   }
 }

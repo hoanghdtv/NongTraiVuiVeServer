@@ -15,5 +15,5 @@
   },
   "include": [
     "src"
-  ]
+, "test/buildings.system.spec.ts", "test/test-nakama.ts", "test-nakama.ts"  ]
 }

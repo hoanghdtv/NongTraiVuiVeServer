@@ -1,6 +1,6 @@
 // src/systems/buildings/__tests__/buildings.system.spec.ts
-import { createBuildingsSystem } from "../systems/building/BuildingSystem";
-import { createTemplateRegistry } from "../systems/building/templateRegistry";
+import { createBuildingsSystem } from "../src/systems/building/BuildingSystem";
+import { createTemplateRegistry } from "../src/systems/building/templateRegistry";
 
 describe("BuildingsSystem", () => {
   it("places and removes building", async () => {

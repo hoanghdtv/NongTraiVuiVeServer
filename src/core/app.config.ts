@@ -7,7 +7,7 @@ import { playground } from "@colyseus/playground";
  */
 import { MyRoom } from "../rooms/MyRoom";
 import { RedisPresence } from "colyseus";
-import { FarmRoom } from "../rooms/FarmRoom";
+import { FarmRoom } from "../rooms/FarmRoom_old";
 
 export default config({
     options: {
