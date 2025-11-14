@@ -8,6 +8,8 @@
     "watch": "tsc --watch",
     "clean": "rm -rf build",
     "rebuild": "npm run clean && npm run build",
+    "sync-shared": "node ../scripts/sync-shared.js",
+    "build-with-sync": "npm run sync-shared && npm run build",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
