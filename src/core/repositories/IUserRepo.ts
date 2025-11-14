@@ -1,4 +1,5 @@
-import { UserDTO } from "../models/user";
+import { UserDTO } from "../../models/user";
+
 
 export interface IUserRepo {
   findOne(id: string): Promise<UserDTO | null>;

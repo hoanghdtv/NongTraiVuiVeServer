@@ -1,7 +1,7 @@
 // src/repositories/bridgeUserRepo.ts
 
-import { BridgeClient } from "../../infrastructures/bridge/BridgeClient";
-import { UserDTO } from "../../models/user";
+import { UserDTO } from "../../../models/user";
+import { BridgeClient } from "../../infrastructures/BridgeClient";
 import { IUserRepo } from "../IUserRepo";
 
 

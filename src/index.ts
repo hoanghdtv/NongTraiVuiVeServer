@@ -11,8 +11,8 @@
 import { listen } from "@colyseus/tools";
 
 // Import Colyseus config
-import app from "./app.config";
-import RedisSubscriber from "./infrastructures/bridge/RedisSubscriber";
+import app from "./core/app.config";
+import RedisSubscriber from "./core/infrastructures/RedisSubscriber";
 
 // Initialize and start the Colyseus game server
 const bridge = new RedisSubscriber(app.options.presence as any);

@@ -5,8 +5,9 @@ import { playground } from "@colyseus/playground";
 /**
  * Import your Room files
  */
-import { MyRoom } from "./rooms/MyRoom";
+import { MyRoom } from "../rooms/MyRoom";
 import { RedisPresence } from "colyseus";
+import { FarmRoom } from "../rooms/FarmRoom";
 
 export default config({
     options: {
@@ -21,7 +22,7 @@ export default config({
         /**
          * Define your room handlers:
          */
-        gameServer.define('my_room', MyRoom);
+        gameServer.define('farm_room', FarmRoom);
 
     },
 
@@ -30,9 +31,9 @@ export default config({
          * Bind your custom express routes here:
          * Read more: https://expressjs.com/en/starter/basic-routing.html
          */
-        app.get("/hello_world", (req, res) => {
-            res.send("It's time to kick ass and chew bubblegum!");
-        });
+        // app.get("/hello_world", (req, res) => {
+        //     res.send("It's time to kick ass and chew bubblegum!");
+        // });
 
         /**
          * Use @colyseus/playground
