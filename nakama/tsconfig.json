@@ -1,26 +1,17 @@
 {
-    "files": [
-    "./src/shared/configs/types.ts",
-    "./src/shared/configs/building-def.ts",
-    "./src/shared/configs/crop-def.ts",
-    "./src/shared/configs/game-configs.ts",
-    "./src/shared/schemas/farm-states.ts",
-    "./src/shared/schemas/migrations.ts",
-    "./src/shared/index.ts",
-    "./src/main.ts"
-  ],
-
   "compilerOptions": {
-    "target": "es5",
-    "module": "amd",
-    "lib": ["es2015"],
-    "esModuleInterop": true,
-    "forceConsistentCasingInFileNames": true,
+    "target": "es2018",
+    "module": "esnext",
+    "lib": ["es2018"],
+    "declaration": true,
+    "emitDeclarationOnly": false,
+    "rootDir": "src",
+    "outDir": "temp",
     "strict": true,
+    "esModuleInterop": true,
     "skipLibCheck": true,
-    "outFile": "./build/index.js",
-    "typeRoots": [
-      "./node_modules"
-    ]
-  }
+    "moduleResolution": "node",
+    "allowSyntheticDefaultImports": true
+  },
+  "include": ["src/**/*"]
 }

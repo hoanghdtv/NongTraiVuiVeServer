@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 /**
- * Script to sync shared types to Nakama
+ * Script to build shared types for Nakama compatibility
  * Usage: node scripts/sync-shared.js
  */
 
@@ -12,7 +12,7 @@ const path = require('path');
 const sharedDir = path.join(__dirname, '../shared');
 const nakamaSharedDir = path.join(__dirname, '../nakama/src/shared');
 
-console.log('🔄 Syncing shared directory to Nakama...');
+console.log('🔄 Building shared types for Nakama...');
 
 try {
   // Create nakama/src/shared directory if it doesn't exist

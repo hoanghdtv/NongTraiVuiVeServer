@@ -1,17 +1,20 @@
-// Import shared modules
-import * as Shared from './shared/index';
+/// <reference types="nakama-runtime" />
 
-// RPC function to get game config
+import { exampleConfig, FarmState } from "./shared";
+
+// import { exampleConfig } from "./shared";
+
 let rpcGetConfig: nkruntime.RpcFunction = function(ctx: nkruntime.Context, logger: nkruntime.Logger, nk: nkruntime.Nakama, payload: string): string {
     logger.info('RPC GetConfig called');
     
     try {
-        // Get the current game config (you can store this in storage or hardcode for now)
-        const config = Shared.exampleConfig;
+        // Get the current game config
+        // const config = exampleConfig;
+        // const configWithChecksum = buildConfigWithChecksum(config);
         
         return JSON.stringify({
             success: true,
-            config: config
+            config: exampleConfig
         });
     } catch (error) {
         logger.error('Error getting config: ' + error);
@@ -43,47 +46,13 @@ let rpcGetFarm: nkruntime.RpcFunction = function(ctx: nkruntime.Context, logger:
         }];
         
         const objects = nk.storageRead(read);
-        let farmState: Shared.FarmState;
+        let farmState: FarmState;
         
         if (objects.length > 0) {
-            farmState = objects[0].value as Shared.FarmState;
+            farmState = objects[0].value as FarmState;
         } else {
-            // Create new farm state using exampleFarmState as template
-            farmState = {
-                version: 1,
-                tick: 0,
-                timeLastSaved: Date.now(),
-                players: {
-                    [userId]: {
-                        id: userId,
-                        name: ctx.username || 'Player',
-                        gold: 1000,
-                        ownedBuildingIds: [],
-                        ownedCropIds: [],
-                        ownedAnimalIds: [],
-                        inventoryId: 'inventory_' + userId,
-                        lastActiveAt: Date.now()
-                    }
-                },
-                buildings: {},
-                crops: {},
-                animals: {},
-                inventories: {
-                    ['inventory_' + userId]: {
-                        id: 'inventory_' + userId,
-                        ownerId: userId,
-                        capacity: 50,
-                        items: { wood: 100, gold: 1000 },
-                        lastModifiedAt: Date.now()
-                    }
-                },
-                world: {
-                    season: 'spring',
-                    dayIndex: 1,
-                    timeOfDay: 0,
-                    tickIntervalSeconds: 1
-                }
-            };
+            // Create new farm state
+            farmState = createExampleFarmState(userId);
             
             // Save new farm state
             const write: nkruntime.StorageWriteRequest[] = [{
@@ -259,3 +228,35 @@ let InitModule: nkruntime.InitModule =
     
     logger.info("Registered RPC functions: hello, get_user, write_data, read_data, get_config, get_farm, update_farm");
 };
+
+// // Export for Nakama runtime - Nakama looks for InitModule function in global scope
+// const InitModule: nkruntime.InitModule = initializeNakama;
+
+// Ensure InitModule is available in multiple ways
+function exposeInitModule() {
+    // Export directly without module wrapper for Nakama runtime
+    // if (typeof exports !== 'undefined') {
+    //     exports.InitModule = InitModule;
+    //     exports.rpcHello = rpcHello;
+    // }
+
+    // Also make available in global scope as fallback
+    if (typeof globalThis !== 'undefined') {
+        (globalThis as any).InitModule = InitModule;
+        (globalThis as any).rpcGetConfig = rpcGetConfig;
+        (globalThis as any).rpcHello = rpcHello;
+        (globalThis as any).rpcGetUser = rpcGetUser;
+        (globalThis as any).rpcWriteData = rpcWriteData;
+        (globalThis as any).rpcReadData = rpcReadData;
+        (globalThis as any).rpcGetFarm = rpcGetFarm;
+        (globalThis as any).rpcUpdateFarm = rpcUpdateFarm;
+        
+    }
+}
+
+// // Call expose function immediately
+exposeInitModule();
+function createExampleFarmState(userId: string): FarmState {
+    throw new Error("Function not implemented.");
+}
+
