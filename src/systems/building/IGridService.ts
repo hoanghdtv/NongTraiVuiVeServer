@@ -1,5 +1,5 @@
 // IGridService.ts
-import { PlacedBuilding, BuildingsState } from "./types";
+import { BuildingInstance, BuildingsState } from "./types";
 
 /**
  * Interface for Grid Service
@@ -36,7 +36,7 @@ export interface IGridService {
   /**
    * Place a building on the grid
    * @param ownerId - ID of the owner
-   * @param templateId - ID of the building template
+   * @param defId - ID of the building definition
    * @param origin - The origin position {x, y}
    * @param w - Width of the building
    * @param h - Height of the building
@@ -45,12 +45,12 @@ export interface IGridService {
    */
   place(
     ownerId: string,
-    templateId: string,
+    defId: string,
     origin: { x: number; y: number },
     w: number,
     h: number,
     rotation?: number
-  ): PlacedBuilding;
+  ): BuildingInstance;
 
   /**
    * Check if a building can be removed by the owner
@@ -84,12 +84,12 @@ export interface IGridService {
    * @returns The upgraded building
    * @throws Error if the building cannot be upgraded
    */
-  upgrade(ownerId: string, buildingId: string): PlacedBuilding;
+  upgrade(ownerId: string, buildingId: string): BuildingInstance;
 
   /**
    * Get a building by its ID
    * @param buildingId - ID of the building
    * @returns The building if found, undefined otherwise
    */
-  getBuilding(buildingId: string): PlacedBuilding | undefined;
+  getBuilding(buildingId: string): BuildingInstance | undefined;
 }

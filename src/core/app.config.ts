@@ -5,9 +5,8 @@ import { playground } from "@colyseus/playground";
 /**
  * Import your Room files
  */
-import { MyRoom } from "../rooms/MyRoom";
 import { RedisPresence } from "colyseus";
-import { FarmRoom } from "../rooms/FarmRoom_old";
+import { FarmRoom } from "../rooms/FarmRoom";
 
 export default config({
     options: {
@@ -22,7 +21,7 @@ export default config({
         /**
          * Define your room handlers:
          */
-        gameServer.define('farm_room', FarmRoom);
+        gameServer.define('FarmRoom', FarmRoom);
 
     },
 

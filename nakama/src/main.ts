@@ -1,6 +1,7 @@
 /// <reference types="nakama-runtime" />
 
-import { exampleConfig, FarmState } from "./shared";
+import e from "express";
+import { exampleConfig, exampleFarmState, FarmState } from "./shared";
 
 // import { exampleConfig } from "./shared";
 
@@ -143,9 +144,22 @@ let rpcUpdateFarm: nkruntime.RpcFunction = function(ctx: nkruntime.Context, logg
 
 // RPC to get user data
 let rpcGetUser: nkruntime.RpcFunction = function(ctx: nkruntime.Context, logger: nkruntime.Logger, nk: nkruntime.Nakama, payload: string): string {
-    logger.info('RPC GetUser called');
-    
-    const userId = ctx.userId || payload;
+   
+    let userId: string =  ctx.userId || '';
+    try{
+        if(payload && payload.length > 0){
+            const data = JSON.parse(payload);
+            if(data.id){
+                userId = data.id;
+            }
+        }
+    }
+    catch(err){
+        logger.error('Error parsing payload in rpcGetUser: ' + err);
+    }
+
+     logger.info('RPC GetUser called : ' + userId);
+
     const account = nk.accountGetId(userId);
     
     return JSON.stringify({
@@ -217,16 +231,16 @@ let InitModule: nkruntime.InitModule =
     
     // Register RPC functions
     initializer.registerRpc('hello', rpcHello);
-    initializer.registerRpc('get_user', rpcGetUser);
-    initializer.registerRpc('write_data', rpcWriteData);
-    initializer.registerRpc('read_data', rpcReadData);
+    initializer.registerRpc('user.get', rpcGetUser);
+    initializer.registerRpc('user.save', rpcWriteData);
+    initializer.registerRpc('user.read', rpcReadData);
     
     // Register new farm-related RPC functions
-    initializer.registerRpc('get_config', rpcGetConfig);
-    initializer.registerRpc('get_farm', rpcGetFarm);
-    initializer.registerRpc('update_farm', rpcUpdateFarm);
+    initializer.registerRpc('farm.get-config', rpcGetConfig);
+    initializer.registerRpc('farm.get', rpcGetFarm);
+    initializer.registerRpc('farm.update', rpcUpdateFarm);
     
-    logger.info("Registered RPC functions: hello, get_user, write_data, read_data, get_config, get_farm, update_farm");
+    logger.info("Registered RPC functions: hello, user.get, user.save, user.read, farm.get-config, farm.get, farm.update");
 };
 
 // // Export for Nakama runtime - Nakama looks for InitModule function in global scope
@@ -257,6 +271,6 @@ function exposeInitModule() {
 // // Call expose function immediately
 exposeInitModule();
 function createExampleFarmState(userId: string): FarmState {
-    throw new Error("Function not implemented.");
+    return exampleFarmState;
 }
 

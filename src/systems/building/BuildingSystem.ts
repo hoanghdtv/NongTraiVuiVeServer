@@ -3,12 +3,12 @@ import { ISystem } from "../../systems/ISystem"; // assume exists in project roo
 import { TemplateRegistry, createTemplateRegistry } from "./templateRegistry";
 import { GridService } from "./impl/GridService";
 import {
-  BuildingsState,
+
   PlaceBuildingAction,
   RemoveBuildingAction,
   UpgradeBuildingAction,
-  PlacedBuilding,
-  BuildingDef
+  BuildingDef,
+  BuildingsState
 } from "./types";
 import { PlayerContext } from "../../models/PlayerContext";
 import { ActionResult } from "../../models/ActionResult";
@@ -44,11 +44,11 @@ export function createBuildingsSystem(opts?: BuildingsSystemOptions): ISystem {
     if (!ctx?.userId) return { ok: false, error: "NO_USER" };
     if (!action || !action.type) return { ok: false, error: "INVALID_ACTION" };
 
-    if (action.type === "place_building") {
+    if (action.type === "place.building") {
       const payload = action.payload as PlaceBuildingAction;
       const tpl = registry.get(payload.templateId);
       if (!tpl) return { ok: false, error: "INVALID_TEMPLATE" };
-      if (!grid.canPlace(payload.origin, tpl.width, tpl.height, bounds)) return { ok: false, error: "CANNOT_PLACE" };
+      if (!grid.canPlace(payload.origin, tpl.size.w, tpl.size.h, bounds)) return { ok: false, error: "CANNOT_PLACE" };
       // check resources if checker supplied
       if (opts?.inventoryChecker) {
         return { ok: true }; // do expensive check in apply to allow async applier
@@ -56,45 +56,45 @@ export function createBuildingsSystem(opts?: BuildingsSystemOptions): ISystem {
       return { ok: true };
     }
 
-    if (action.type === "remove_building") {
+    if (action.type === "remove.building") {
       const payload = action.payload as RemoveBuildingAction;
       if (!payload.buildingId) return { ok: false, error: "INVALID_PAYLOAD" };
       if (!grid.canRemove(ctx.userId, payload.buildingId)) return { ok: false, error: "CANNOT_REMOVE" };
       return { ok: true };
     }
 
-    if (action.type === "upgrade_building") {
-      const payload = action.payload as UpgradeBuildingAction;
-      const b = grid.getBuilding(payload.buildingId);
-      if (!b) return { ok: false, error: "NOT_FOUND" };
-      const tpl = registry.get(b.templateId);
-      if (!tpl) return { ok: false, error: "INVALID_TEMPLATE_ON_BUILDING" };
-      if (!grid.canUpgrade(ctx.userId, payload.buildingId, tpl.maxLevel)) return { ok: false, error: "MAX_LEVEL" };
-      // resource check maybe async in apply
-      return { ok: true };
-    }
+    // if (action.type === "upgrade_building") {
+    //   const payload = action.payload as UpgradeBuildingAction;
+    //   const b = grid.getBuilding(payload.buildingId);
+    //   if (!b) return { ok: false, error: "NOT_FOUND" };
+    //   const tpl = registry.get(b.defId);
+    //   if (!tpl) return { ok: false, error: "INVALID_TEMPLATE_ON_BUILDING" };
+    //   if (!grid.canUpgrade(ctx.userId, payload.buildingId, tpl.)) return { ok: false, error: "MAX_LEVEL" };
+    //   // resource check maybe async in apply
+    //   return { ok: true };
+    // }
 
     return { ok: false, error: "UNKNOWN_ACTION_TYPE" };
   };
 
   const applyAction = async (action: any, ctx: PlayerContext, farmState: any): Promise<ActionResult> => {
-    if (action.type === "place_building") {
+    if (action.type === "place.building") {
       const payload = action.payload as PlaceBuildingAction;
-      const tpl = registry.get(payload.templateId) as BuildingTemplate;
+      const tpl = registry.get(payload.templateId) as BuildingDef;
       if (!tpl) return { ok: false, error: "INVALID_TEMPLATE" };
 
       // resource check / deduct if applier exists
       if (opts?.inventoryChecker) {
-        const check = await opts.inventoryChecker(ctx.userId, tpl.cost);
+        const check = await opts.inventoryChecker(ctx.userId, tpl.buildCost.gold ? { gold: tpl.buildCost.gold } : undefined);
         if (!check.ok) return { ok: false, error: check.error || "NOT_ENOUGH_RESOURCES" };
         // apply cost
         if (opts.inventoryApplier) {
-          const applied = await opts.inventoryApplier(ctx.userId, tpl.cost);
+          const applied = await opts.inventoryApplier(ctx.userId, tpl.buildCost.gold ? { gold: tpl.buildCost.gold } : undefined);
           if (!applied.ok) return { ok: false, error: applied.error || "COST_APPLY_FAILED" };
         }
       }
 
-      const placed = grid.place(ctx.userId, tpl.templateId, payload.origin, tpl.width, tpl.height, payload.rotation);
+      const placed = grid.place(ctx.userId, tpl.id, payload.origin, tpl.size.w, tpl.size.h, payload.rotation);
       // return minimal delta
       return {
         ok: true,
@@ -104,7 +104,7 @@ export function createBuildingsSystem(opts?: BuildingsSystemOptions): ISystem {
       };
     }
 
-    if (action.type === "remove_building") {
+    if (action.type === "remove.building") {
       const payload = action.payload as RemoveBuildingAction;
       if (!grid.canRemove(ctx.userId, payload.buildingId)) return { ok: false, error: "CANNOT_REMOVE" };
       // optionally refund? handle via inventoryApplier if needed
@@ -113,20 +113,20 @@ export function createBuildingsSystem(opts?: BuildingsSystemOptions): ISystem {
       return {
         ok: true,
         stateDelta: { buildings: { removed: [payload.buildingId] } },
-        events: [{ type: "BUILDING_REMOVED", data: { buildingId: payload.buildingId, origin: removedBuilding?.origin } }],
+        events: [{ type: "BUILDING_REMOVED", data: { buildingId: payload.buildingId, origin: removedBuilding?.pos } }],
         meta: { serverTime: Date.now() },
       };
     }
 
-    if (action.type === "upgrade_building") {
+    if (action.type === "upgrade.building") {
       const payload = action.payload as UpgradeBuildingAction;
       const b = grid.getBuilding(payload.buildingId);
       if (!b) return { ok: false, error: "NOT_FOUND" };
-      const tpl = registry.get(b.templateId);
+      const tpl = registry.get(b.id);
       if (!tpl) return { ok: false, error: "INVALID_TEMPLATE_ON_BUILDING" };
 
       // resource check & apply
-      const upgradeCost = tpl.cost ? Object.fromEntries(Object.entries(tpl.cost).map(([k, v]) => [k, Math.floor(v * (b.level + 1) * 0.5)])) : undefined;
+      const upgradeCost = tpl.buildCost ? Object.fromEntries(Object.entries(tpl.buildCost.gold).map(([k, v]) => [k, Math.floor(v * (b.level + 1) * 0.5)])) : undefined;
       if (opts?.inventoryChecker) {
         const check = await opts.inventoryChecker(ctx.userId, upgradeCost);
         if (!check.ok) return { ok: false, error: check.error || "NOT_ENOUGH_RESOURCES" };

@@ -9,8 +9,8 @@ const fs = require('fs');
 const path = require('path');
 
 // Paths
-const sharedDir = path.join(__dirname, '../src/shared');
-const nakamaSharedDir = path.join(__dirname, '../nakama/src/shared');
+const sharedDir = path.join(__dirname, '../../src/shared');
+const nakamaSharedDir = path.join(__dirname, '../src/shared');
 
 console.log('🔄 Building shared types for Nakama...');
 

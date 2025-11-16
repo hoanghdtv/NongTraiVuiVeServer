@@ -1,5 +1,5 @@
 // src/systems/buildings/GridService.ts
-import { PlacedBuilding, BuildingsState } from "../types";
+import { BuildingInstance, BuildingsState } from "../types";
 import { IGridService } from "../IGridService";
 
 function keyOf(x: number, y: number) { return `${x}:${y}`; }
@@ -47,17 +47,17 @@ export class GridService implements IGridService {
     return true;
   }
 
-  place(ownerId: string, templateId: string, origin: { x: number; y: number }, w: number, h: number, rotation?: number) {
+  place(ownerId: string, defId: string, origin: { x: number; y: number }, w: number, h: number, rotation?: number) {
     const id = `b_${this.state.nextIdCounter++}_${Date.now().toString(36)}`;
     const now = Date.now();
-    const placed: PlacedBuilding = {
+    const placed: BuildingInstance = {
       id,
+      defId,
       ownerId,
-      templateId,
-      level: 1,
-      origin,
+      pos: origin,
       rotation: (rotation as any) || 0,
-      placedAt: now,
+      level: 1,
+      createdAt: now,
       meta: { width: w, height: h },
     };
     // mark occupancy
@@ -79,7 +79,7 @@ export class GridService implements IGridService {
     const b = this.state.byId[buildingId];
     const w = b.meta?.width ?? 1;
     const h = b.meta?.height ?? 1;
-    const cells = this.cellsFor(b.origin, w, h);
+    const cells = this.cellsFor(b.pos, w, h);
     for (const c of cells) {
       delete this.state.occupancy[keyOf(c.x, c.y)];
     }

@@ -50,16 +50,16 @@ services:
       timeout: 5s
       retries: 5
 
-  # redis:
-  #   image: redis:7
-  #   container_name: colyseus-redis
-  #   restart: unless-stopped
-  #   ports:
-  #     - "6379:6379"
-  #   volumes:
-  #     - redis-data:/data
-  #   networks:
-  #     - coly-net
+  redis:
+    image: redis:7
+    container_name: colyseus-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    networks:
+      - coly-net
 
   # colyseus:
   #   build: .

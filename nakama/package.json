@@ -1,11 +1,11 @@
 {
-  "name": "nakama-esbuild",
+  "name": "nakama-rollup",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
   "scripts": {
     "build": "rollup -c",
-    "sync-shared": "node ../scripts/sync-shared.js",
+    "sync-shared": "node scripts/sync-shared.js",
     "build-with-sync": "npm run sync-shared && npm run build",
     "build:watch": "rollup -c --watch",
     "build:prod": "NODE_ENV=production rollup -c",

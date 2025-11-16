@@ -13,7 +13,7 @@
     "build": "npm run clean && tsc",
     "clean": "rimraf build",
     "test": "mocha -r tsx test/**_test.ts --exit --timeout 15000",
-    "sync-shared": "node scripts/build-shared-simple.js",
+    "sync-shared": "node nakama/sc/build-shared-simple.js",
     "build-nakama": "cd nakama && npm run build-with-sync",
     "test-nakama": "tsx test/test-nakama.ts"
   },

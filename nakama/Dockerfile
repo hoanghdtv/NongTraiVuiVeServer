@@ -13,7 +13,7 @@ RUN npm ci --no-audit --prefer-offline
 COPY tsconfig.json ./
 COPY rollup.config.js ./
 
-# Copy source code and shared types
+# Copy source code  
 COPY src/ src/
 
 # Clean any previous builds

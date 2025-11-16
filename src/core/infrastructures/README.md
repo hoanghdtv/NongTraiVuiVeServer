@@ -1,8 +1,39 @@
-# Redis-to-Nakama Bridge
+# Infrastructure Components
 
-This bridge connects Colyseus presence events (via Redis) to Nakama server.
+This directory contains infrastructure components for the game server.
 
-## Features
+## Components
+
+### 1. NakamaClient (formerly BridgeClient)
+
+**Purpose:** Server-to-server communication between Colyseus and Nakama
+
+**Usage:**
+```typescript
+import { NakamaClient } from "./NakamaClient";
+
+const nakama = new NakamaClient({
+  host: "localhost",
+  port: 7350,
+  serverKey: "your-server-key"
+});
+
+await nakama.authenticateServer();
+const result = await nakama.rpc("custom.function", { data });
+```
+
+**Features:**
+- ✅ Server authentication with retry logic
+- ✅ RPC calls to Nakama functions
+- ✅ Storage operations
+- ✅ Session management
+- ✅ Game-specific helper methods
+
+### 2. RedisSubscriber
+
+**Purpose:** Bridge between Colyseus presence events and Nakama
+
+**Key Features:**
 
 - ✅ Subscribe to Redis channels for Colyseus presence events
 - ✅ Pattern-based subscription (e.g., `room:*:join`)
